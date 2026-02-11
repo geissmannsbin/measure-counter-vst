@@ -182,26 +182,6 @@ cp -r build/MeasureCounter_artefacts/Release/VST3/MeasureCounter.vst3 \
 
 5. **Reset if Needed**: Click the RESET button to restart the cycle from bar 1 at any time
 
-## Visual Guide
-
-### Display Layout
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  BAR                BEAT              PROGRESS           │
-│   8          ● ○ ○ ○       Bar:    [■■■■■■□□□]           │
-│  (RED)      (4/4 time)     Cycle:  [■■■■■■■■■]           │
-│                                                           │
-│         [RESET]     [Cycle: 8 Bars ▾]                    │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Color Coding
-
-- **Cyan** (bars 1 through N-2): Normal operation
-- **Yellow** (bar N-1): Warning - approaching the end of the cycle
-- **Red** (bar N): Last bar - typically for fills, breaks, or transitions
-
 ## Troubleshooting
 
 ### Plugin doesn't appear in DAW
