@@ -84,25 +84,59 @@ void MeasureDisplay::paint (juce::Graphics& g)
         else
             segmentColor = juce::Colour(0, 180, 255); // Vivid blue (less cyan, more saturated)
         
+        // Background colors
+        juce::Colour bgColor(200, 195, 185); // Warm beige for unfilled
+        juce::Colour darkBg(60, 60, 65); // Dark grey background
+        
         if (isBeforeCurrent)
         {
-            // Fully filled - completed bars
-            g.setColour(segmentColor);
+            // Fully filled - completed bars with beat segments on dark background
+            int beatsInBar = transportInfo.timeSigNumerator;
+            float beatGap = 2.0f;
+            float totalGaps = beatGap * (beatsInBar - 1);
+            float beatWidth = (segment.getWidth() - totalGaps) / beatsInBar;
+            
+            // Dark background for completed bars
+            g.setColour(darkBg);
             g.fillRect(segment);
+            
+            for (int beat = 0; beat < beatsInBar; ++beat)
+            {
+                float beatX = segment.getX() + beat * (beatWidth + beatGap);
+                juce::Rectangle<float> beatRect(beatX, segment.getY(), beatWidth, segment.getHeight());
+                // Dim the color for completed bars - darker like future bars
+                g.setColour(segmentColor.withAlpha(0.3f));
+                g.fillRect(beatRect);
+            }
         }
         else if (isCurrentBar)
         {
-            // Partially filled based on position within bar
-            double barProgress = transportInfo.positionInBar;
+            // Partially filled based on position within bar - fill by beat segments
+            int beatsInBar = transportInfo.timeSigNumerator;
+            int currentBeatInBar = transportInfo.currentBeat - 1; // 0-indexed
+            
+            float beatGap = 2.0f;
+            float totalGaps = beatGap * (beatsInBar - 1);
+            float beatWidth = (segment.getWidth() - totalGaps) / beatsInBar;
             
             // Background - warm light grey for high contrast with black text and blue
-            g.setColour(juce::Colour(200, 195, 185));
+            g.setColour(bgColor);
             g.fillRect(segment);
             
-            // Fill
-            auto fillRect = segment.withWidth(segment.getWidth() * barProgress);
-            g.setColour(segmentColor);
-            g.fillRect(fillRect);
+            // Fill beats up to and including the current beat
+            for (int beat = 0; beat < beatsInBar; ++beat)
+            {
+                float beatX = segment.getX() + beat * (beatWidth + beatGap);
+                juce::Rectangle<float> beatRect(beatX, segment.getY(), beatWidth, segment.getHeight());
+                
+                if (beat <= currentBeatInBar)
+                {
+                    // Current beat and all previous beats - fully filled
+                    g.setColour(segmentColor);
+                    g.fillRect(beatRect);
+                }
+                // Future beats remain as background (beige)
+            }
             
             // Border highlight for current bar - bright green for maximum visibility
             g.setColour(juce::Colour(0, 255, 0));
@@ -111,7 +145,7 @@ void MeasureDisplay::paint (juce::Graphics& g)
         else
         {
             // Empty - future bars - dark grey for clear differentiation
-            g.setColour(juce::Colour(60, 60, 65));
+            g.setColour(darkBg);
             g.fillRect(segment);
         }
         
@@ -119,11 +153,19 @@ void MeasureDisplay::paint (juce::Graphics& g)
         g.setColour(juce::Colour(80, 80, 85));
         g.drawRect(segment, 1.0f);
         
-        // Draw bar number in segment (bigger, bolder, black)
-        if (segmentWidth > 30) // Only if there's enough space
+        // Draw bar number in segment - all numbers same size based on available space
+        if (segmentWidth > 20) // Only if there's enough space
         {
             g.setColour(juce::Colours::black);
-            g.setFont(juce::FontOptions(labelFontSize * 4.0f).withStyle("Bold"));
+            
+            // Calculate font size assuming worst case (2-digit numbers)
+            // This ensures all numbers are consistently sized
+            float fontSize = segmentWidth * 0.45f; // 45% of segment width for 2-digit numbers
+            
+            // Cap between reasonable limits
+            fontSize = juce::jmax(12.0f, juce::jmin(fontSize, segment.getHeight() * 0.7f));
+            
+            g.setFont(juce::FontOptions(fontSize).withStyle("Bold"));
             g.drawText(juce::String(barNum), segment, juce::Justification::centred, false);
         }
     }
