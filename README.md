@@ -1,5 +1,8 @@
 # MeasureCounter VST Plugin
 
+<img width="1700" height="172" alt="Screenshot 2026-02-11 at 15 22 04" src="https://github.com/user-attachments/assets/b1a1f01b-c6a6-4f1a-9808-34456c4afd63" />
+
+
 [![Latest Release](https://img.shields.io/github/v/release/geissmannsbin/measure-counter-vst)](https://github.com/geissmannsbin/measure-counter-vst/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
