@@ -16,6 +16,10 @@ public:
     
     void setTransportInfo(const MeasureCounterAudioProcessor::TransportInfo& info);
     
+    // Mouse events for hover detection
+    void mouseEnter(const juce::MouseEvent& event) override;
+    void mouseExit(const juce::MouseEvent& event) override;
+    
     // Button listener
     void buttonClicked(juce::Button* button) override;
 
@@ -26,11 +30,21 @@ private:
     // UI Components
     juce::TextButton resetButton;
     juce::ComboBox cycleLengthSelector;
+    juce::TextButton settingsIcon;
+    juce::TextButton closeIcon;
+    
+    // Settings overlay state
+    bool settingsVisible = false;
+    bool isHovering = false;
     
     // Colors for different bar states
     juce::Colour getBarColor() const;
     juce::Colour getBackgroundColor() const;
     juce::Colour getTextColor() const;
+    
+    // Settings management
+    void toggleSettings(bool show);
+    void updateIconVisibility();
     
     // Font size (calculated in resized())
     float labelFontSize = 20.0f;

@@ -6,7 +6,7 @@ MeasureDisplay::MeasureDisplay(MeasureCounterAudioProcessor& p)
     // Setup reset button
     resetButton.setButtonText("RESET");
     resetButton.addListener(this);
-    addAndMakeVisible(resetButton);
+    addChildComponent(resetButton); // Hidden by default
     
     // Setup cycle length selector
     cycleLengthSelector.addItem("4 Bars", 1);
@@ -34,12 +34,28 @@ MeasureDisplay::MeasureDisplay(MeasureCounterAudioProcessor& p)
         audioProcessor.setCycleLength(newCycleLength);
     };
     
-    addAndMakeVisible(cycleLengthSelector);
+    addChildComponent(cycleLengthSelector); // Hidden by default
+    
+    // Setup settings icon (gear)
+    settingsIcon.setButtonText(juce::CharPointer_UTF8("\xE2\x9A\x99")); // ⚙ gear symbol
+    settingsIcon.addListener(this);
+    settingsIcon.setAlwaysOnTop(true); // Keep it on top
+    addAndMakeVisible(settingsIcon); // Add as visible child
+    settingsIcon.setVisible(false); // Start hidden
+    
+    // Setup close icon (X)
+    closeIcon.setButtonText(juce::CharPointer_UTF8("\xE2\x9C\x95")); // ✕ X symbol
+    closeIcon.addListener(this);
+    closeIcon.setAlwaysOnTop(true); // Keep it on top
+    addAndMakeVisible(closeIcon); // Add as visible child
+    closeIcon.setVisible(false); // Start hidden
 }
 
 MeasureDisplay::~MeasureDisplay()
 {
     resetButton.removeListener(this);
+    settingsIcon.removeListener(this);
+    closeIcon.removeListener(this);
 }
 
 void MeasureDisplay::paint (juce::Graphics& g)
@@ -49,10 +65,7 @@ void MeasureDisplay::paint (juce::Graphics& g)
     // Background
     g.fillAll(getBackgroundColor());
     
-    // Reserve space for controls at bottom
-    bounds.removeFromBottom(50);
-    
-    // Main display area - single cycle progress bar
+    // Main display area - single cycle progress bar (use full height now)
     auto displaySection = bounds;
     
     // ===== CYCLE PROGRESS (segmented by bars) =====
@@ -180,6 +193,25 @@ void MeasureDisplay::paint (juce::Graphics& g)
         g.setFont(bounds.getHeight() * 0.15f);
         g.drawText("STOPPED", getLocalBounds(), juce::Justification::centred, false);
     }
+    
+    // Draw settings overlay if visible
+    if (settingsVisible)
+    {
+        // Black overlay covering everything
+        g.setColour(juce::Colours::black.withAlpha(0.85f));
+        g.fillAll();
+        
+        // Semi-transparent panel behind controls (centered, tight fit with 5px padding)
+        int panelWidth = 260;  // Tight fit for controls
+        int panelHeight = 50;  // Just enough for one row of controls with padding
+        auto panelBounds = getLocalBounds().withSizeKeepingCentre(panelWidth, panelHeight);
+        g.setColour(juce::Colour(40, 40, 45).withAlpha(0.9f));
+        g.fillRoundedRectangle(panelBounds.toFloat(), 8.0f);
+        
+        // Optional: Draw border around panel
+        g.setColour(juce::Colour(100, 100, 105));
+        g.drawRoundedRectangle(panelBounds.toFloat(), 8.0f, 2.0f);
+    }
 }
 
 void MeasureDisplay::resized()
@@ -189,21 +221,32 @@ void MeasureDisplay::resized()
     // Calculate font sizes based on component height
     labelFontSize = juce::jmax(14.0f, bounds.getHeight() * 0.12f);
     
-    // Control area at bottom (fixed 50px height)
-    auto controlArea = bounds.removeFromBottom(50);
-    controlArea.reduce(20, 10);
+    // Position settings icon in top-right corner
+    int iconSize = 30;
+    int padding = 10;
+    auto iconBounds = juce::Rectangle<int>(bounds.getWidth() - iconSize - padding, 
+                                           padding, 
+                                           iconSize, 
+                                           iconSize);
+    settingsIcon.setBounds(iconBounds);
+    closeIcon.setBounds(iconBounds); // Same position
     
-    // Position controls (centered)
-    int buttonWidth = juce::jmin(100, controlArea.getWidth() / 3);
-    int comboWidth = juce::jmin(120, controlArea.getWidth() / 3);
+    // Position controls in centered panel (tight fit)
+    int panelWidth = 260;
+    int panelHeight = 50;
+    auto panelBounds = bounds.withSizeKeepingCentre(panelWidth, panelHeight);
+    auto controlArea = panelBounds.reduced(5); // 5px padding
+    
+    // Position controls (side by side, centered within panel)
+    int buttonWidth = 100;
+    int comboWidth = 120;
     int spacing = 20;
-    
     int totalWidth = buttonWidth + spacing + comboWidth;
-    int startX = (controlArea.getWidth() - totalWidth) / 2;
+    int startX = controlArea.getX() + (controlArea.getWidth() - totalWidth) / 2;
+    int controlY = controlArea.getY() + (controlArea.getHeight() - 30) / 2; // Center vertically
     
-    resetButton.setBounds(startX, controlArea.getY(), buttonWidth, controlArea.getHeight());
-    cycleLengthSelector.setBounds(startX + buttonWidth + spacing, controlArea.getY(), 
-                                   comboWidth, controlArea.getHeight());
+    resetButton.setBounds(startX, controlY, buttonWidth, 30);
+    cycleLengthSelector.setBounds(startX + buttonWidth + spacing, controlY, comboWidth, 30);
 }
 
 void MeasureDisplay::setTransportInfo(const MeasureCounterAudioProcessor::TransportInfo& info)
@@ -212,11 +255,62 @@ void MeasureDisplay::setTransportInfo(const MeasureCounterAudioProcessor::Transp
     repaint();
 }
 
+void MeasureDisplay::mouseEnter(const juce::MouseEvent& event)
+{
+    juce::ignoreUnused(event);
+    isHovering = true;
+    updateIconVisibility();
+}
+
+void MeasureDisplay::mouseExit(const juce::MouseEvent& event)
+{
+    juce::ignoreUnused(event);
+    // Check if mouse is actually outside the component bounds
+    if (!getLocalBounds().contains(event.getPosition()))
+    {
+        isHovering = false;
+        updateIconVisibility();
+    }
+}
+
 void MeasureDisplay::buttonClicked(juce::Button* button)
 {
     if (button == &resetButton)
     {
         audioProcessor.resetCycle();
+    }
+    else if (button == &settingsIcon)
+    {
+        toggleSettings(true);
+    }
+    else if (button == &closeIcon)
+    {
+        toggleSettings(false);
+    }
+}
+
+void MeasureDisplay::toggleSettings(bool show)
+{
+    settingsVisible = show;
+    updateIconVisibility();
+    resetButton.setVisible(show);
+    cycleLengthSelector.setVisible(show);
+    repaint();
+}
+
+void MeasureDisplay::updateIconVisibility()
+{
+    if (settingsVisible)
+    {
+        // Settings are open - show X, hide gear
+        settingsIcon.setVisible(false);
+        closeIcon.setVisible(true);
+    }
+    else
+    {
+        // Settings are closed - show gear only on hover
+        settingsIcon.setVisible(isHovering);
+        closeIcon.setVisible(false);
     }
 }
 
