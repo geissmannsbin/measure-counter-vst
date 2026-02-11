@@ -1,0 +1,45 @@
+# Build directories
+build/
+cmake-build-*/
+Builds/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# JUCE
+*.jucer.bak
+JuceLibraryCode/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+
+# Compiled files
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+*.a
+*.lib
+
+# Plugin binaries (don't commit built plugins)
+*.vst3
+*.component
+*.app
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
