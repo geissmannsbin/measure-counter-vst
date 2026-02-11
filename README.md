@@ -1,5 +1,8 @@
 # MeasureCounter VST Plugin
 
+[![Latest Release](https://img.shields.io/github/v/release/geissmannsbin/measure-counter-vst)](https://github.com/geissmannsbin/measure-counter-vst/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A JUCE-based VST3/AU plugin that provides clear visual feedback for measure counting during live performances. Perfect for musicians who need to stay synced during shows, rehearsals, or recording sessions.
 
 ## Features
@@ -19,6 +22,24 @@ A JUCE-based VST3/AU plugin that provides clear visual feedback for measure coun
 - **Minimal CPU Usage**: No audio processing overhead
 
 ## Requirements
+
+### Download Pre-Built Binaries
+
+Pre-built plugins are available for macOS, Windows, and Linux on the [Releases page](https://github.com/geissmannsbin/measure-counter-vst/releases).
+
+**Quick Installation:**
+
+1. Download the `.zip` file for your platform from the latest release
+2. Extract the archive
+3. Copy the plugin files to your system's plugin directory:
+   - **macOS**: VST3 → `~/Library/Audio/Plug-Ins/VST3/`, AU → `~/Library/Audio/Plug-Ins/Components/`
+   - **Windows**: VST3 → `C:\Program Files\Common Files\VST3\`
+   - **Linux**: VST3 → `~/.vst3/`
+4. Restart your DAW or rescan plugins
+
+**macOS Note:** First launch requires right-click > Open due to unsigned binaries (macOS Gatekeeper). Subsequent launches work normally.
+
+---
 
 ### For Building
 
@@ -40,7 +61,7 @@ A JUCE-based VST3/AU plugin that provides clear visual feedback for measure coun
 
 ```bash
 # Clone the repository (if not already done)
-git clone <your-repo-url>
+git clone https://github.com/geissmannsbin/measure-counter-vst.git
 cd measure-counter-vst
 
 # Initialize JUCE submodule
@@ -65,7 +86,7 @@ cmake --build . --config Release
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/geissmannsbin/measure-counter-vst.git
 cd measure-counter-vst
 
 # Initialize JUCE submodule
@@ -89,7 +110,7 @@ cmake --build . --config Release
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/geissmannsbin/measure-counter-vst.git
 cd measure-counter-vst
 
 # Initialize JUCE submodule
@@ -224,7 +245,7 @@ To modify the plugin (e.g., change colors, fonts, or default sizes):
 
 ## License
 
-[Specify your license here]
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Credits
 

@@ -1,0 +1,41 @@
+MeasureCounter - Linux Installation
+====================================
+
+CONTENTS:
+- MeasureCounter.vst3 (64-bit VST3 plugin)
+
+DEPENDENCIES (Required):
+Install these packages before using the plugin:
+
+Ubuntu/Debian:
+sudo apt-get install libasound2 libfreetype6 libx11-6 \
+                     libxrandr2 libxinerama1 libxcursor1 \
+                     libgl1-mesa-glx
+
+Fedora/RHEL:
+sudo dnf install alsa-lib freetype libX11 libXrandr \
+                 libXinerama libXcursor mesa-libGL
+
+Arch:
+sudo pacman -S alsa-lib freetype2 libx11 libxrandr \
+               libxinerama libxcursor mesa
+
+INSTALLATION:
+
+1. Create VST3 directory if it doesn't exist:
+   mkdir -p ~/.vst3
+
+2. Copy the plugin:
+   cp -r MeasureCounter.vst3 ~/.vst3/
+
+3. Restart your DAW or rescan plugins
+
+SUPPORTED DAWS:
+- Reaper
+- Bitwig Studio
+- Ardour
+- Renoise
+- And any DAW supporting VST3
+
+ISSUES:
+https://github.com/geissmannsbin/measure-counter-vst/issues

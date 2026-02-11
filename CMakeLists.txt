@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add JUCE subdirectory
 add_subdirectory(JUCE)
 
+# macOS: Build universal binary (Apple Silicon + Intel)
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS" FORCE)
+endif()
+
 # Define the plugin target
 juce_add_plugin(MeasureCounter
     COMPANY_NAME "doktrin"

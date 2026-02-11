@@ -1,0 +1,209 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    name: Build macOS (Universal)
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.15'
+      
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      
+      - name: Verify Universal Binary
+        run: |
+          echo "Checking VST3 binary architecture:"
+          lipo -info build/MeasureCounter_artefacts/Release/VST3/MeasureCounter.vst3/Contents/MacOS/MeasureCounter || echo "VST3 binary not found"
+          echo "Checking AU binary architecture:"
+          lipo -info build/MeasureCounter_artefacts/Release/AU/MeasureCounter.component/Contents/MacOS/MeasureCounter || echo "AU binary not found"
+      
+      - name: Package
+        run: |
+          cd build/MeasureCounter_artefacts/Release
+          mkdir -p package
+          cp -r VST3/MeasureCounter.vst3 package/
+          cp -r AU/MeasureCounter.component package/
+          cp ../../../.github/INSTALL-macOS.txt package/INSTALL.txt
+          cd package
+          zip -r ../../../../MeasureCounter-macOS.zip .
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeasureCounter-macOS
+          path: MeasureCounter-macOS.zip
+
+  build-windows:
+    name: Build Windows (x64)
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.15'
+      
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+      
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      
+      - name: Package
+        shell: bash
+        run: |
+          cd build/MeasureCounter_artefacts/Release
+          mkdir -p package
+          cp -r VST3/MeasureCounter.vst3 package/
+          cp ../../../.github/INSTALL-Windows.txt package/INSTALL.txt
+          cd package
+          7z a -tzip ../../../../MeasureCounter-Windows.zip *
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeasureCounter-Windows
+          path: MeasureCounter-Windows.zip
+
+  build-linux:
+    name: Build Linux (x86_64)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev \
+                                  libxrandr-dev libxinerama-dev libxcursor-dev \
+                                  libgl1-mesa-dev
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.15'
+      
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      
+      - name: Package
+        run: |
+          cd build/MeasureCounter_artefacts/Release
+          mkdir -p package
+          cp -r VST3/MeasureCounter.vst3 package/
+          cp ../../../.github/INSTALL-Linux.txt package/INSTALL.txt
+          cd package
+          zip -r ../../../../MeasureCounter-Linux.zip .
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeasureCounter-Linux
+          path: MeasureCounter-Linux.zip
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "First release - showing all commits"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Changes since $PREV_TAG"
+            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          # Save changelog to file for multiline support
+          echo "$CHANGELOG" > changelog.txt
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MeasureCounter ${{ steps.version.outputs.VERSION }}
+          body: |
+            # MeasureCounter ${{ steps.version.outputs.VERSION }}
+            
+            Download the appropriate `.zip` file for your platform below.
+            
+            **Installation:**
+            1. Extract the archive
+            2. Copy plugin files to your system's plugin directory (see INSTALL.txt inside)
+            3. Restart your DAW or rescan plugins
+            
+            **macOS users:** Right-click > Open on first launch (unsigned binary).
+            
+            ---
+            
+            ## Changes in this release
+            
+            $(cat changelog.txt)
+            
+            ---
+            
+            **Supported Formats:**
+            - macOS: VST3 (universal) + AU (universal)
+            - Windows: VST3 (x64)
+            - Linux: VST3 (x86_64)
+            
+            **Tested DAWs:** Logic Pro, Ableton Live, Reaper, Pro Tools, FL Studio
+            
+            For issues or questions: https://github.com/geissmannsbin/measure-counter-vst/issues
+          files: |
+            artifacts/MeasureCounter-macOS/MeasureCounter-macOS.zip
+            artifacts/MeasureCounter-Windows/MeasureCounter-Windows.zip
+            artifacts/MeasureCounter-Linux/MeasureCounter-Linux.zip
+          draft: false
+          prerelease: false

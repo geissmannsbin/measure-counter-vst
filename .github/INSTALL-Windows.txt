@@ -1,0 +1,32 @@
+MeasureCounter - Windows Installation
+======================================
+
+CONTENTS:
+- MeasureCounter.vst3 (64-bit VST3 plugin)
+
+INSTALLATION:
+
+1. Extract this archive
+
+2. Copy the plugin to your VST3 folder:
+   C:\Program Files\Common Files\VST3\
+
+   Or use the command prompt:
+   xcopy /E /I MeasureCounter.vst3 "C:\Program Files\Common Files\VST3\MeasureCounter.vst3"
+
+3. Restart your DAW or rescan plugins
+
+WINDOWS SMARTSCREEN:
+Windows may show a SmartScreen warning for unsigned software.
+Click "More info" then "Run anyway" to proceed.
+
+SUPPORTED DAWS:
+- Ableton Live
+- FL Studio
+- Reaper
+- Cubase
+- Studio One
+- And any DAW supporting VST3
+
+ISSUES:
+https://github.com/geissmannsbin/measure-counter-vst/issues

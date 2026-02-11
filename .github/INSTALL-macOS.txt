@@ -1,0 +1,40 @@
+MeasureCounter - macOS Installation
+====================================
+
+CONTENTS:
+- MeasureCounter.vst3 (Universal: Apple Silicon + Intel)
+- MeasureCounter.component (Audio Unit - Universal)
+
+INSTALLATION:
+
+1. Copy the files to your plugin directories:
+
+   VST3:
+   cp -r MeasureCounter.vst3 ~/Library/Audio/Plug-Ins/VST3/
+
+   Audio Unit:
+   cp -r MeasureCounter.component ~/Library/Audio/Plug-Ins/Components/
+
+2. Clear the Audio Unit cache (recommended):
+   killall -9 AudioComponentRegistrar
+   rm -rf ~/Library/Caches/AudioUnitCache
+
+3. Restart your DAW or rescan plugins
+
+FIRST LAUNCH:
+macOS Gatekeeper will block unsigned plugins. To allow:
+- Right-click on the plugin in Finder
+- Select "Open"
+- Click "Open" in the dialog
+- Subsequent launches work normally
+
+SUPPORTED DAWS:
+- Logic Pro
+- Ableton Live
+- Reaper
+- Pro Tools
+- FL Studio
+- And any DAW supporting VST3 or AU
+
+ISSUES:
+https://github.com/geissmannsbin/measure-counter-vst/issues
